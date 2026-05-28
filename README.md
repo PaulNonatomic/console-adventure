@@ -11,11 +11,6 @@
 
 </div>
 
-## Support
-If you like my work then please consider showing your support for console-adventure by giving the repo a star or buying me a brew
-<br><br>
-<a href="https://www.buymeacoffee.com/nonatomic" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
-
 ## Why
 
 The engine is the same one Nonatomic uses for the dev-console game on [nonatomic.co.uk](https://nonatomic.co.uk). It started life welded to the console; this package is the cleaned-up, logger-agnostic version. Use it for:
@@ -268,6 +263,13 @@ npm test           # vitest
 npm run typecheck  # tsc --noEmit
 npm run build      # tsup → dist/
 ```
+
+---
+
+## Support
+If you like my work then please consider showing your support for console-adventure by giving the repo a star or buying me a brew
+<br><br>
+<a href="https://www.buymeacoffee.com/nonatomic" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 ---
 
