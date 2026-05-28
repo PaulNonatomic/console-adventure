@@ -110,6 +110,8 @@ shell.install();
 
 When attached, the adventure's theme and logger rebind to the shell's so the combined output reads as one consistent UI. The exposed namespace gets `.play()` (alias for `start()`), `.choose(n)`, and `.share()` if a `share:` config is present.
 
+> **No dependency on console-shell.** `console-adventure` has zero runtime and zero peer dependencies — `package.json` is literally `"dependencies": {}`. The `asShellPlugin()` adapter doesn't import `console-shell`; it returns a structurally-typed `{ attachTo(shell: ShellLike): void }` where `ShellLike` is an interface defined inside `console-adventure` itself. `console-shell` happens to implement that same shape, so the handoff just works — but TypeScript and the runtime are unaware of any cross-package relationship. You can install either package without the other; they're independent libraries that compose through a shared structural contract.
+
 ---
 
 ## API
