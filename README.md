@@ -1,6 +1,6 @@
 # console-adventure
 
-> A branching choice-based text-adventure engine. Plays out in any logger (the browser console by default). Pairs with [`console-shell`](https://github.com/PaulNonatomic/console-shell).
+> A branching choice-based text-adventure engine. Built on top of [`console-shell`](https://github.com/PaulNonatomic/console-shell) — shares its theme, logger, and style helpers. Plays out in any logger (the browser console by default).
 
 `console-adventure` is a tiny dependency-free engine for choice-based interactive narratives. You declare a scene graph as a plain object; the engine handles state, scoring, branching, tier resolution, and an optional share intent. The output renders into any logger you supply — the browser console by default, but anything with `.log(msg, ...styles)` works.
 
@@ -22,7 +22,7 @@ The engine is the same one Nonatomic uses for the dev-console game on [nonatomic
 - A terminal app via xterm.js or ink
 - Headless interactive-fiction tests
 
-Zero runtime dependencies. ESM + CJS + types, ~5 KB gzipped.
+One runtime dependency (`console-shell`, the shared substrate). ESM + CJS + types, ~5 KB gzipped on its own.
 
 ---
 
@@ -110,7 +110,7 @@ shell.install();
 
 When attached, the adventure's theme and logger rebind to the shell's so the combined output reads as one consistent UI. The exposed namespace gets `.play()` (alias for `start()`), `.choose(n)`, and `.share()` if a `share:` config is present.
 
-> **No dependency on console-shell.** `console-adventure` has zero runtime and zero peer dependencies — `package.json` is literally `"dependencies": {}`. The `asShellPlugin()` adapter doesn't import `console-shell`; it returns a structurally-typed `{ attachTo(shell: ShellLike): void }` where `ShellLike` is an interface defined inside `console-adventure` itself. `console-shell` happens to implement that same shape, so the handoff just works — but TypeScript and the runtime are unaware of any cross-package relationship. You can install either package without the other; they're independent libraries that compose through a shared structural contract.
+> **Layered on top of console-shell.** As of 0.2.0, `console-adventure` depends on [`console-shell`](https://github.com/PaulNonatomic/console-shell) for `Theme`, `Logger`, `DEFAULT_THEME`, and the style helpers — installing `console-adventure` pulls `console-shell` automatically. This deliberately removes the duplication that the earlier 0.1.0 release carried. The two packages still have separate concerns (one is a CLI surface, the other is a narrative engine), but the *shared substrate* — palette types, log contract, theme defaults — lives in one place. All the shared types are also re-exported from `console-adventure`, so `import { Theme, DEFAULT_THEME } from 'console-adventure'` still works without you touching console-shell directly.
 
 ---
 

@@ -1,29 +1,40 @@
 /**
  * console-adventure — branching choice-based text-adventure
- * engine. Plays out in any logger (the browser console by
- * default), and pairs cleanly with the companion
- * `console-shell` package for the easter-egg use case.
+ * engine. Built on top of `console-shell`: shares its Theme,
+ * Logger, DEFAULT_THEME, and the style helpers. Use either
+ * standalone (drive `createAdventure` directly into your own
+ * logger) or attached to a shell via `asShellPlugin()`.
  *
  * Public API:
  *   - `createAdventure(config)`   — scene graph runner
- *   - `DEFAULT_THEME`             — phosphor-on-void palette
- *   - `resolveTheme(partial)`     — merge a partial over defaults
  *   - Share intent builders for X / Mastodon / Bluesky
  *
- * Types are re-exported as type-only so consumers can declare
- * configs with full IDE support without the runtime cost of
- * importing the implementation modules.
+ * Shared types and helpers are re-exported from `console-shell`
+ * so a consumer using only `console-adventure` can still pull
+ * them with `import { Theme, DEFAULT_THEME } from 'console-adventure'`.
  */
 
 export { createAdventure } from './adventure.js';
-export type {
-	Adventure,
-	AdventureState,
-	ShellLike,
-	ShellPluginLike
-} from './adventure.js';
+export type { Adventure, AdventureState } from './adventure.js';
 
-export { DEFAULT_THEME, resolveTheme } from './theme.js';
+// Re-export the shared types + helpers from console-shell so
+// consumers of console-adventure can import them from a single
+// place. console-shell remains the source of truth — anything
+// changed there appears here automatically next install.
+export {
+	DEFAULT_THEME,
+	resolveTheme,
+	colorFor,
+	styleFor,
+	styleBoldFor
+} from 'console-shell';
+export type {
+	Theme,
+	ThemeColor,
+	Logger,
+	Shell,
+	ShellPlugin
+} from 'console-shell';
 
 export {
 	buildXIntent,
@@ -32,9 +43,6 @@ export {
 } from './share.js';
 
 export type {
-	Theme,
-	ThemeColor,
-	Logger,
 	Choice,
 	Scene,
 	Tier,

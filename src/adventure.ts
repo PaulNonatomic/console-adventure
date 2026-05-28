@@ -5,25 +5,29 @@
  * Returns an object with three callable methods (`start`,
  * `choose`, `share`) plus introspection getters
  * (`maxScore`, `tierFor`, `getState`) and an
- * `asShellPlugin()` adapter that makes it pluggable into
- * `console-shell` (or any structurally-compatible shell).
+ * `asShellPlugin()` adapter that produces a `ShellPlugin`
+ * for `console-shell`.
  *
  * The engine itself is logger-agnostic — it renders via the
  * `logger` passed in config (defaults to `console`). The
- * default theme is a phosphor-on-void palette but can be
- * overridden in config or swapped at attach time by the shell
- * bridge.
+ * default theme is console-shell's `DEFAULT_THEME` but can be
+ * overridden in config or swapped at attach time by the
+ * shell plugin.
  */
+import type {
+	Theme,
+	ThemeColor,
+	Logger,
+	Shell,
+	ShellPlugin
+} from 'console-shell';
+import { resolveTheme, styleFor, styleBoldFor } from 'console-shell';
 import type {
 	AdventureConfig,
 	Choice,
 	Scene,
-	Theme,
-	Tier,
-	Logger,
-	ThemeColor
+	Tier
 } from './types.js';
-import { resolveTheme } from './theme.js';
 import {
 	styleSceneHeading,
 	styleNarration,
@@ -31,35 +35,9 @@ import {
 	styleResultMarker,
 	styleResultText,
 	styleResultRule,
-	styleFinish,
-	styleFor,
-	styleBoldFor
+	styleFinish
 } from './style.js';
 import { buildXIntent } from './share.js';
-
-/**
- * Structural shell interface for the asShellPlugin() adapter.
- * Matches console-shell's Shell shape without importing it —
- * any orchestrator with the same surface area can be the
- * receiver. Kept narrow so test stubs are tiny.
- */
-export interface ShellLike {
-	readonly theme: Theme;
-	readonly logger: Logger;
-	registerCommand: (
-		name: string,
-		command: {
-			description: string;
-			color?: ThemeColor;
-			run: (...args: unknown[]) => void;
-		}
-	) => void;
-}
-
-/** What `asShellPlugin()` returns — matches console-shell's ShellPlugin. */
-export interface ShellPluginLike {
-	attachTo: (shell: ShellLike) => void;
-}
 
 /** Public state exposed via `getState()` for inspection / tests. */
 export interface AdventureState {
@@ -86,13 +64,13 @@ export interface Adventure {
 	/** Inspect current state. `null` before the first `start()`. */
 	getState(): AdventureState | null;
 	/**
-	 * Return a ShellPlugin-shaped object that registers the
-	 * play/choose/share commands on a console-shell-compatible
-	 * shell. Calling `attachTo(shell)` rebinds the adventure's
-	 * logger and theme to the shell's at attach time, so the
-	 * combined output reads as one consistent UI.
+	 * Return a console-shell `ShellPlugin` that registers the
+	 * play / choose / share commands on a shell. Calling
+	 * `attachTo(shell)` rebinds the adventure's logger and
+	 * theme to the shell's at attach time, so the combined
+	 * output reads as one consistent UI.
 	 */
-	asShellPlugin(): ShellPluginLike;
+	asShellPlugin(): ShellPlugin;
 }
 
 export function createAdventure(config: AdventureConfig): Adventure {
@@ -124,7 +102,7 @@ export function createAdventure(config: AdventureConfig): Adventure {
 
 	// Theme and logger are mutable so `asShellPlugin().attachTo()`
 	// can rebind them to the shell's. Initially they resolve from
-	// config (or defaults).
+	// config (or console-shell's defaults).
 	let theme: Theme = resolveTheme(config.theme);
 	let logger: Logger = config.logger ?? {
 		// eslint-disable-next-line no-console
@@ -277,9 +255,9 @@ export function createAdventure(config: AdventureConfig): Adventure {
 		config.onComplete?.({ score, max: maxScore, tier });
 	}
 
-	function asShellPlugin(): ShellPluginLike {
+	function asShellPlugin(): ShellPlugin {
 		return {
-			attachTo(shell: ShellLike) {
+			attachTo(shell: Shell) {
 				// Rebind logger and theme to the shell's so the
 				// combined output reads as one consistent UI. The
 				// adventure no longer uses its own configured

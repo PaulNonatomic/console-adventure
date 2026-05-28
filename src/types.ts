@@ -1,40 +1,9 @@
 /**
- * Public types for console-adventure.
- *
- * Includes a small `Theme` + `Logger` of its own — structurally
- * identical to console-shell's but kept independent so the
- * adventure engine works standalone, without any awareness of
- * the shell package. The `bridgeToShell()` helper exported from
- * `./bridge` handles the (trivial) mapping when both packages
- * are used together.
+ * Adventure-specific types. Theme / ThemeColor / Logger live
+ * in console-shell — we re-export them from `./index` so a
+ * consumer who's only using console-adventure can still pull
+ * them with `import { Theme } from 'console-adventure'`.
  */
-
-/**
- * Theme palette used when rendering scenes via the default
- * console logger. Same shape as console-shell's Theme so
- * bridging is a pass-through. Every field is a CSS string.
- */
-export interface Theme {
-	primary: string;
-	accent: string;
-	danger: string;
-	info: string;
-	text: string;
-	dim: string;
-	fontFamily: string;
-	fontSize: string;
-}
-
-export type ThemeColor = 'primary' | 'accent' | 'danger' | 'info' | 'text' | 'dim';
-
-/**
- * Minimal logger contract — every output the engine makes goes
- * through `.log(message, ...styles)`. `console` satisfies this
- * directly; tests pass a capturing stub.
- */
-export interface Logger {
-	log: (message: string, ...styles: string[]) => void;
-}
 
 /**
  * One option presented to the player in a scene. The chosen
@@ -78,11 +47,13 @@ export interface Scene {
 /**
  * Score-to-label mapping for the end-of-game tier. Listed in
  * any order; the resolver picks the highest qualifying entry.
+ * `color` is a theme-slot name (`'primary' | 'accent' | ...`)
+ * — uses the ThemeColor type from console-shell.
  */
 export interface Tier {
 	minScore: number;
 	label: string;
-	color?: ThemeColor;
+	color?: import('console-shell').ThemeColor;
 }
 
 /**
@@ -117,20 +88,20 @@ export interface AdventureConfig {
 	share?: ShareConfig;
 	/**
 	 * Theme used by the built-in renderer. Falls back to
-	 * `DEFAULT_THEME`. When bridged onto a console-shell, the
-	 * bridge can swap this for the shell's theme at attach
-	 * time.
+	 * `DEFAULT_THEME` from console-shell. When attached to a
+	 * shell via `asShellPlugin()`, the bridge swaps this for
+	 * the shell's theme at attach time.
 	 */
-	theme?: Partial<Theme>;
+	theme?: Partial<import('console-shell').Theme>;
 	/**
 	 * Logger to write rendered output through. Defaults to
 	 * `console`. Tests pass a capturing stub.
 	 */
-	logger?: Logger;
+	logger?: import('console-shell').Logger;
 	/**
-	 * Optional analytics hooks. Each fires at most once per
-	 * `start()` call (no stateful dedupe across replays —
-	 * that's the consumer's job, if they want it).
+	 * Optional analytics hooks. Each fires exactly once per
+	 * trigger (no stateful dedupe across replays — that's the
+	 * consumer's job, if they want it).
 	 */
 	onStart?: () => void;
 	onComplete?: (args: { score: number; max: number; tier: string }) => void;

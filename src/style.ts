@@ -1,25 +1,16 @@
 /**
- * Style-string builders for the adventure renderer. Returns
- * the CSS strings passed as the second argument to
- * `logger.log("%c...", style)`.
+ * Adventure-specific style-string builders.
  *
- * Kept independent from console-shell so the engine can be
- * used without that package — when bridged onto a shell, the
- * bridge just passes the shell's theme through to these
- * builders and the output looks consistent across the two.
+ * Shared helpers (`styleFor`, `styleBoldFor`) and the
+ * `Theme` / `ThemeColor` types live in console-shell — we
+ * import them here. What stays in this file is the styles
+ * that are *adventure-specific*: scene heading, narration,
+ * choices, result callout, finish banner.
  */
-import type { Theme, ThemeColor } from './types.js';
+import type { Theme } from 'console-shell';
 
 function baseFont(theme: Theme): string {
 	return `font-family: ${theme.fontFamily}; font-size: ${theme.fontSize};`;
-}
-
-export function styleFor(theme: Theme, slot: ThemeColor): string {
-	return `color: ${theme[slot]}; ${baseFont(theme)}`;
-}
-
-export function styleBoldFor(theme: Theme, slot: ThemeColor): string {
-	return `color: ${theme[slot]}; font-weight: bold; ${baseFont(theme)}`;
 }
 
 /** Scene heading — primary, bold, one rank larger than body. */

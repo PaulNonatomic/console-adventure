@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createAdventure } from '../src/adventure.js';
-import type { AdventureConfig, Logger } from '../src/types.js';
+import type { AdventureConfig } from '../src/types.js';
+import type { Logger, Shell } from 'console-shell';
 
 function makeLogger(): { logger: Logger; messages: string[] } {
 	const messages: string[] = [];
@@ -208,7 +209,7 @@ describe('createAdventure / asShellPlugin', () => {
 			...branchingScript,
 			share: { text: () => 't', url: () => 'u' }
 		});
-		a.asShellPlugin().attachTo(fakeShell);
+		a.asShellPlugin().attachTo(fakeShell as unknown as Shell);
 		expect(registered.play).toBeTypeOf('object');
 		expect(registered.choose).toBeTypeOf('object');
 		expect(registered.share).toBeTypeOf('object');
@@ -233,7 +234,7 @@ describe('createAdventure / asShellPlugin', () => {
 			}
 		};
 		const a = createAdventure(branchingScript);
-		a.asShellPlugin().attachTo(fakeShell);
+		a.asShellPlugin().attachTo(fakeShell as unknown as Shell);
 		expect(registered.play).toBeTypeOf('object');
 		expect(registered.choose).toBeTypeOf('object');
 		expect(registered.share).toBeUndefined();
@@ -262,7 +263,7 @@ describe('createAdventure / asShellPlugin', () => {
 			}
 		};
 		const a = createAdventure(branchingScript);
-		a.asShellPlugin().attachTo(fakeShell);
+		a.asShellPlugin().attachTo(fakeShell as unknown as Shell);
 		registered.play!.run();
 		registered.choose!.run('2'); // string coerces to 2 → right
 		expect(calls.some((c) => String(c.args[0]).includes('right room'))).toBe(true);
@@ -291,7 +292,7 @@ describe('createAdventure / asShellPlugin', () => {
 			}
 		};
 		const a = createAdventure(branchingScript);
-		a.asShellPlugin().attachTo(fakeShell);
+		a.asShellPlugin().attachTo(fakeShell as unknown as Shell);
 		registered.choose!.run('abc');
 		expect(messages.some((m) => m.includes('needs a number'))).toBe(true);
 	});

@@ -1,6 +1,6 @@
 {
 	"name": "console-adventure",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "A branching choice-based text-adventure engine. Plays out in any logger (the browser console by default). Pairs with console-shell.",
 	"keywords": [
 		"text-adventure",
@@ -57,5 +57,8 @@
 	"sideEffects": false,
 	"engines": {
 		"node": ">=20"
+	},
+	"dependencies": {
+		"console-shell": "github:PaulNonatomic/console-shell"
 	}
 }

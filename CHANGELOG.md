@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file. The format
 is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] — Unreleased
+
+### Changed
+
+- **Layered on top of `console-shell`.** The 0.1.0 release shipped its own
+  copy of `Theme`, `Logger`, `DEFAULT_THEME`, `resolveTheme`, and the small
+  style helpers — duplicating the same surface that already lived in
+  `console-shell`. From 0.2.0, `console-adventure` declares
+  `console-shell` as a runtime dependency and imports those types and
+  helpers from it. The structural `ShellLike` / `ShellPluginLike` workaround
+  is gone; `asShellPlugin()` now returns the real `ShellPlugin` from
+  `console-shell`. All shared types are still re-exported from
+  `console-adventure` so consumers don't have to import from
+  `console-shell` directly unless they want to.
+- The `Logger` type imported here matches `console-shell`'s rename from
+  `ShellLogger` → `Logger` (also 0.2.0 on that side).
+
+### Removed
+
+- `src/theme.ts` (now re-exported from `console-shell`).
+- Duplicated `Theme`, `ThemeColor`, `Logger` from `src/types.ts` (same).
+- `ShellLike`, `ShellPluginLike` from `src/adventure.ts` (replaced by
+  `Shell`, `ShellPlugin` imported from `console-shell`).
+
 ## [0.1.0] — Unreleased
 
 Initial release.
