@@ -1,6 +1,6 @@
 {
 	"name": "console-adventure",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "A branching choice-based text-adventure engine. Plays out in any logger (the browser console by default). Pairs with console-shell.",
 	"keywords": [
 		"text-adventure",
@@ -34,6 +34,7 @@
 	},
 	"files": [
 		"dist",
+		"adventure.schema.json",
 		"README.md",
 		"LICENSE",
 		"CHANGELOG.md"

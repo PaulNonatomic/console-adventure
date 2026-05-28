@@ -17,6 +17,13 @@
 export { createAdventure } from './adventure.js';
 export type { Adventure, AdventureState } from './adventure.js';
 
+export { createAdventureFromJson } from './json.js';
+export type {
+	AdventureJson,
+	JsonShareConfig,
+	AdventureExtras
+} from './json.js';
+
 // Re-export the shared types + helpers from console-shell so
 // consumers of console-adventure can import them from a single
 // place. console-shell remains the source of truth — anything

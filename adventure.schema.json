@@ -1,0 +1,118 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://raw.githubusercontent.com/PaulNonatomic/console-adventure/main/adventure.schema.json",
+	"title": "Adventure",
+	"description": "Wire-format config for console-adventure's createAdventureFromJson().",
+	"type": "object",
+	"required": ["start", "scenes"],
+	"additionalProperties": false,
+	"properties": {
+		"$schema": {
+			"type": "string",
+			"description": "Optional JSON Schema reference for editor tooling."
+		},
+		"start": {
+			"type": "string",
+			"minLength": 1,
+			"description": "Scene id where the game begins. Must exist as a key under `scenes`."
+		},
+		"scenes": {
+			"type": "object",
+			"description": "Scene graph keyed by scene id.",
+			"minProperties": 1,
+			"additionalProperties": { "$ref": "#/definitions/scene" }
+		},
+		"tiers": {
+			"type": "array",
+			"description": "Score-to-label mapping. Resolver picks the highest qualifying entry. Optional.",
+			"items": { "$ref": "#/definitions/tier" }
+		},
+		"share": { "$ref": "#/definitions/share" },
+		"intro": {
+			"type": "array",
+			"description": "Lines printed once at the top of every start(). Optional.",
+			"items": { "type": "string" }
+		}
+	},
+	"definitions": {
+		"scene": {
+			"type": "object",
+			"required": ["heading", "narration", "choices"],
+			"additionalProperties": false,
+			"properties": {
+				"heading": {
+					"type": "string",
+					"description": "Scene heading. Rendered in primary colour."
+				},
+				"narration": {
+					"type": "array",
+					"description": "Body lines. Each entry is one logger.log call.",
+					"items": { "type": "string" }
+				},
+				"choices": {
+					"type": "array",
+					"description": "Numbered options the player picks via choose(n).",
+					"minItems": 1,
+					"items": { "$ref": "#/definitions/choice" }
+				}
+			}
+		},
+		"choice": {
+			"type": "object",
+			"required": ["label", "next"],
+			"additionalProperties": false,
+			"properties": {
+				"label": {
+					"type": "string",
+					"description": "Display text shown after the choice index."
+				},
+				"points": {
+					"type": "number",
+					"description": "Score awarded for picking this choice. Optional."
+				},
+				"flavour": {
+					"type": "string",
+					"description": "Result callout printed after the choice. Optional."
+				},
+				"next": {
+					"type": ["string", "null"],
+					"description": "Next scene id, or null to end the game."
+				}
+			}
+		},
+		"tier": {
+			"type": "object",
+			"required": ["minScore", "label"],
+			"additionalProperties": false,
+			"properties": {
+				"minScore": { "type": "number" },
+				"label": { "type": "string" },
+				"color": {
+					"type": "string",
+					"enum": ["primary", "accent", "danger", "info", "text", "dim"],
+					"description": "Theme colour slot used to tint the tier label."
+				}
+			}
+		},
+		"share": {
+			"type": "object",
+			"required": ["text", "url"],
+			"additionalProperties": false,
+			"properties": {
+				"text": {
+					"type": "string",
+					"description": "Template for the share post body. Placeholders: ${score}, ${max}, ${tier}."
+				},
+				"url": {
+					"type": "string",
+					"description": "Template for the share URL. Placeholders: ${score}, ${tier}."
+				},
+				"intent": {
+					"type": "string",
+					"pattern": "^(x|twitter|bluesky|mastodon(:.+)?)$",
+					"description": "Share-platform preset. Defaults to x (Twitter). Use mastodon:host.tld to target a specific Mastodon instance."
+				}
+			}
+		}
+	}
+}

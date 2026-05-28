@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file. The format
 is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — Unreleased
+
+### Added
+
+- `createAdventureFromJson(json, extras?)` — build an `Adventure` from a
+  JSON-shaped config. The `share.text` and `share.url` fields are template
+  strings with `${score}` / `${max}` / `${tier}` placeholders the engine
+  compiles to functions at load time. `share.intent` becomes a preset string:
+  `"x"` (default), `"bluesky"`, `"mastodon"`, or `"mastodon:instance.tld"`
+  to target a specific Mastodon host.
+- `AdventureJson`, `JsonShareConfig`, `AdventureExtras` exported as types
+  so authors can declare and pass JSON configs with full IDE support.
+- `adventure.schema.json` shipped at the package root — a draft-07 JSON
+  Schema that editors / IDEs / the upcoming `console-adventure-studio`
+  tool can validate against and use for autocomplete. Reference it from a
+  config via the standard `$schema` field.
+- Foundry example now ships in two forms: TypeScript (`scenes.ts`) and
+  JSON (`foundry.json`).
+
+### Notes
+
+The runtime `AdventureConfig` still takes functions; JSON support is a
+sibling loader, not a replacement. Hooks (`onStart` / `onComplete` /
+`onShare`) and the `theme` / `logger` overrides can't ride over JSON for
+obvious reasons (functions don't serialise) — they're passed as a second
+`extras` arg to `createAdventureFromJson` so analytics + custom rendering
+stay code-side.
+
 ## [0.2.0] — Unreleased
 
 ### Changed

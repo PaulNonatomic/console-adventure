@@ -191,6 +191,53 @@ Hooks fire raw — no built-in dedupe. Wrap with `sessionStorage` if you want on
 
 ---
 
+## Loading an adventure from JSON
+
+If you'd rather author narratives as data than as TypeScript object literals — useful for storing adventures in a CMS, hot-loading user-generated content, or feeding the output of a visual editor — `createAdventureFromJson` consumes a JSON-shaped config:
+
+```ts
+import { createAdventureFromJson } from 'console-adventure';
+
+const adventure = createAdventureFromJson(
+	await fetch('/foundry.json').then((r) => r.json()),
+	{
+		// hooks + theme + logger stay code-side, passed as `extras`
+		onComplete: ({ score, tier }) => analytics.track('done', { score, tier })
+	}
+);
+```
+
+The JSON shape mirrors `AdventureConfig` with three concessions for serialisability:
+
+```json
+{
+	"$schema": "https://raw.githubusercontent.com/PaulNonatomic/console-adventure/main/adventure.schema.json",
+	"start": "entrance",
+	"scenes": { /* same shape as TS — heading, narration, choices */ },
+	"tiers": [{ "minScore": 8, "label": "Master", "color": "primary" }],
+	"share": {
+		"text": "Forged ${tier} (${score}/${max}) at example.com",
+		"url":  "https://example.com/foundry?s=${score}",
+		"intent": "x"
+	},
+	"intro": ["..."]
+}
+```
+
+| JSON field          | What it becomes at runtime                                                  |
+| ------------------- | --------------------------------------------------------------------------- |
+| `share.text`        | Function that interpolates `${score}` / `${max}` / `${tier}`                |
+| `share.url`         | Function that interpolates `${score}` / `${tier}`                           |
+| `share.intent`      | Preset string: `"x"` (default), `"bluesky"`, `"mastodon"`, `"mastodon:host.tld"` |
+| `onStart` etc.      | **Not in JSON** — pass via the `extras` arg                                 |
+| `theme`, `logger`   | **Not in JSON** — pass via the `extras` arg                                 |
+
+A canonical JSON Schema ships at the package root (`adventure.schema.json`) for IDE autocomplete, validators, and the upcoming `console-adventure-studio` visual editor.
+
+A working JSON foundry example sits in [`examples/foundry/foundry.json`](./examples/foundry/foundry.json) alongside the TypeScript version.
+
+---
+
 ## Standalone vs bridged
 
 The engine works either way:
