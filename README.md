@@ -1,21 +1,20 @@
-# console-adventure
+<div align="center">
 
-> A branching choice-based text-adventure engine. Built on top of [`console-shell`](https://github.com/PaulNonatomic/console-shell) — shares its theme, logger, and style helpers. Plays out in any logger (the browser console by default).
+### A branching choice-based text-adventure engine for the browser console.
 
-`console-adventure` is a tiny dependency-free engine for choice-based interactive narratives. You declare a scene graph as a plain object; the engine handles state, scoring, branching, tier resolution, and an optional share intent. The output renders into any logger you supply — the browser console by default, but anything with `.log(msg, ...styles)` works.
+`console-adventure` is a tiny engine for choice-based interactive narratives. Built on top of [`console-shell`](https://github.com/PaulNonatomic/console-shell). You declare a scene graph as a plain object; the engine handles state, scoring, branching, tier resolution, and an optional share intent. The output renders into any logger you supply — the browser console by default, but anything with `.log(msg, ...styles)` works.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PullRequests](https://img.shields.io/badge/PRs-welcome-blueviolet)](http://makeapullrequest.com)
+[![Releases](https://img.shields.io/github/v/release/PaulNonatomic/console-adventure)](https://github.com/PaulNonatomic/console-adventure/releases)
 [![CI](https://github.com/PaulNonatomic/console-adventure/actions/workflows/ci.yml/badge.svg)](https://github.com/PaulNonatomic/console-adventure/actions/workflows/ci.yml)
-[![license: MIT](https://img.shields.io/badge/license-MIT-c7f441.svg)](./LICENSE)
 
-<!-- npm badge will appear here once the package is published. -->
-<!-- [![npm](https://img.shields.io/npm/v/console-adventure.svg)](https://www.npmjs.com/package/console-adventure) -->
+</div>
 
 ## Support
 If you like my work then please consider showing your support for console-adventure by giving the repo a star or buying me a brew
 <br><br>
 <a href="https://www.buymeacoffee.com/nonatomic" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
-
----
 
 ## Why
 
