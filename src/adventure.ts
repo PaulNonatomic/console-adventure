@@ -38,6 +38,7 @@ import {
 	styleFinish
 } from './style.js';
 import { buildXIntent } from './share.js';
+import { computeMaxScore, tierFor as resolveTier } from './score.js';
 
 /** Public state exposed via `getState()` for inspection / tests. */
 export interface AdventureState {
@@ -82,15 +83,16 @@ export function createAdventure(config: AdventureConfig): Adventure {
 
 	const maxScore = computeMaxScore(config);
 
+	// Tier label / colour resolution delegates to the public
+	// helper in `./score.js`. Tier colour still needs a private
+	// lookup because the public `tierFor` only returns the
+	// label — colour is internal styling concern.
 	const sortedTiers: Tier[] = [...(config.tiers ?? [])].sort(
 		(a, b) => b.minScore - a.minScore
 	);
 
 	function tierFor(score: number): string {
-		for (const tier of sortedTiers) {
-			if (score >= tier.minScore) return tier.label;
-		}
-		return 'Player';
+		return resolveTier(score, config.tiers);
 	}
 
 	function tierColorFor(score: number): ThemeColor {
@@ -307,29 +309,8 @@ export function createAdventure(config: AdventureConfig): Adventure {
 	};
 }
 
-/**
- * Depth-first walk of the scene graph, summing the best
- * point-take from each node. Memoised, so reconverging
- * branches (e.g. two scenes both leading to a third) don't
- * double-count.
- */
-function computeMaxScore(config: AdventureConfig): number {
-	const cache = new Map<string, number>();
-	function bestFrom(sceneId: string): number {
-		const cached = cache.get(sceneId);
-		if (cached !== undefined) return cached;
-		const scene = config.scenes[sceneId];
-		if (!scene) {
-			cache.set(sceneId, 0);
-			return 0;
-		}
-		const best = Math.max(
-			...scene.choices.map(
-				(c) => (c.points ?? 0) + (c.next ? bestFrom(c.next) : 0)
-			)
-		);
-		cache.set(sceneId, best);
-		return best;
-	}
-	return bestFrom(config.start);
-}
+// `computeMaxScore` used to live here. It now lives in
+// `./score.ts` as a public export so the studio and any other
+// downstream tool can compute scores without instantiating a
+// runtime Adventure. This file imports the same function at
+// the top.

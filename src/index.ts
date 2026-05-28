@@ -24,6 +24,13 @@ export type {
 	AdventureExtras
 } from './json.js';
 
+// Pure-function helpers — exposed so tooling (editors, JSON
+// validators, score-preview UIs) can answer "what's the max
+// score" or "what tier does score N resolve to" without
+// instantiating a runtime Adventure.
+export { computeMaxScore, tierFor } from './score.js';
+export type { ScoreableGraph } from './score.js';
+
 // Re-export the shared types + helpers from console-shell so
 // consumers of console-adventure can import them from a single
 // place. console-shell remains the source of truth — anything

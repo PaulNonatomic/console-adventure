@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file. The format
 is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — Unreleased
+
+### Added
+
+- `computeMaxScore(graph)` exported as a public helper. Memoised DFS over the
+  scene graph; same algorithm the runtime `Adventure` uses internally, now
+  available without instantiating a runtime instance — so editors and tooling
+  can compute scores without spinning up a `Logger`. Accepts both the runtime
+  `AdventureConfig` and the wire-format `AdventureJson` structurally via a
+  `ScoreableGraph` shape.
+- `tierFor(score, tiers, fallback?)` exported as a public helper. Pure
+  function — resolves the highest qualifying tier label for a score against
+  any tier table. Used internally by `createAdventure(...).tierFor()` so both
+  call paths return identical answers.
+- `ScoreableGraph` type exported alongside, so downstream consumers can
+  declare functions that accept either flavour of adventure config.
+
+### Fixed
+
+- `computeMaxScore` no longer stack-overflows on cyclic narratives. Seeds the
+  cache with `0` for the in-progress scene before descending, so a recursive
+  call that loops back short-circuits. Non-cyclic graphs see no behavioural
+  change; previously the DFS would recurse forever and crash.
+
+### Internal
+
+- `createAdventure(...)` delegates its private max-score DFS and tier-label
+  resolver to the new public helpers. One implementation, two call sites.
+
 ## [0.3.0] — Unreleased
 
 ### Added
