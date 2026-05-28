@@ -10,6 +10,10 @@
 <!-- npm badge will appear here once the package is published. -->
 <!-- [![npm](https://img.shields.io/npm/v/console-adventure.svg)](https://www.npmjs.com/package/console-adventure) -->
 
+## Support
+If you like my work then please consider showing your support for console-adventure by giving the repo a star or buying me a brew
+<br><br>
+<a href="https://www.buymeacoffee.com/nonatomic" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 ---
 
