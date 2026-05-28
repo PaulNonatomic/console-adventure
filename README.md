@@ -5,8 +5,11 @@
 `console-adventure` is a tiny dependency-free engine for choice-based interactive narratives. You declare a scene graph as a plain object; the engine handles state, scoring, branching, tier resolution, and an optional share intent. The output renders into any logger you supply — the browser console by default, but anything with `.log(msg, ...styles)` works.
 
 [![CI](https://github.com/PaulNonatomic/console-adventure/actions/workflows/ci.yml/badge.svg)](https://github.com/PaulNonatomic/console-adventure/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/console-adventure.svg)](https://www.npmjs.com/package/console-adventure)
-[![license](https://img.shields.io/npm/l/console-adventure.svg)](./LICENSE)
+[![license: MIT](https://img.shields.io/badge/license-MIT-c7f441.svg)](./LICENSE)
+
+<!-- npm badge will appear here once the package is published. -->
+<!-- [![npm](https://img.shields.io/npm/v/console-adventure.svg)](https://www.npmjs.com/package/console-adventure) -->
+
 
 ---
 

@@ -11,7 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [18, 20, 22]
+        # Node 20+ — jsdom@29 dropped Node 18 (its deep dep
+        # @exodus/bytes is ESM-only and CJS-required from
+        # html-encoding-sniffer there). The library itself
+        # ships ESM + CJS and works on Node 18 at runtime;
+        # this floor is purely a dev-deps constraint.
+        node: [20, 22]
     steps:
       - uses: actions/checkout@v4
 
