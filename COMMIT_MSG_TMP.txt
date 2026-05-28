@@ -1,0 +1,44 @@
+feat: initial console-adventure release (v0.1.0)
+
+A branching choice-based text-adventure engine. Plays out in any
+logger (the browser console by default). Pairs with console-shell
+via the asShellPlugin() adapter.
+
+Forked out of console-quest (now console-shell) so the engine can
+be used outside the dev console — in-game UIs, terminal apps,
+headless tests. Both halves of the original library are stronger
+on their own: console-shell finds a wider audience (any easter-egg
+use case, no quest needed), console-adventure isn't welded to the
+dev console (the logger is pluggable).
+
+Public surface:
+
+  createAdventure(config)
+    - scene graph: Record<sceneId, Scene>
+    - choice.next routes branching; null finishes the game
+    - optional scoring with DFS-based max-score resolution that
+      handles reconverging branches correctly
+    - optional tier table with colour slots
+    - optional share config; defaults to X (Twitter) intent
+
+  Standalone methods on Adventure:
+    start(), choose(n), share(), getState(), tierFor(), maxScore
+
+  asShellPlugin() returns a { attachTo(shell) } adapter that
+  registers play/choose/share commands on a console-shell-shaped
+  shell. The bridge rebinds the adventure's theme + logger to the
+  shell's at attach time so the combined output is consistent.
+
+  buildXIntent / buildMastodonIntent / buildBlueskyIntent — share
+  URL builders consumers can mix and match.
+
+Zero runtime dependencies. ESM + CJS + types via tsup. Strict
+TypeScript. 22 vitest tests covering scoring math (DFS),
+standalone playthroughs both branches, share guards, and the
+asShellPlugin adapter (command registration, argument coercion,
+share opt-out).
+
+Includes the full Foundry example replicating Nonatomic's live
+dev-console adventure.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>

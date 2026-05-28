@@ -1,0 +1,60 @@
+{
+	"name": "console-adventure",
+	"version": "0.1.0",
+	"description": "A branching choice-based text-adventure engine. Plays out in any logger (the browser console by default). Pairs with console-shell.",
+	"keywords": [
+		"text-adventure",
+		"interactive-fiction",
+		"narrative",
+		"scene-graph",
+		"console",
+		"choose-your-own-adventure",
+		"branching"
+	],
+	"author": "Paul Stamp <paul@nonatomic.co.uk> (https://nonatomic.co.uk)",
+	"license": "MIT",
+	"homepage": "https://github.com/PaulNonatomic/console-adventure",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/PaulNonatomic/console-adventure.git"
+	},
+	"bugs": {
+		"url": "https://github.com/PaulNonatomic/console-adventure/issues"
+	},
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		}
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit",
+		"prepublishOnly": "npm run build && npm run test && npm run typecheck"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.0",
+		"jsdom": "^29.1.1",
+		"tsup": "^8.3.0",
+		"typescript": "^5.7.0",
+		"vitest": "^2.1.0"
+	},
+	"sideEffects": false,
+	"engines": {
+		"node": ">=18"
+	}
+}

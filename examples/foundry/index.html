@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>console-adventure · foundry example (standalone)</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style>
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				min-height: 100vh;
+				font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+				background: #0a0a0f;
+				color: #eef0f5;
+				display: grid;
+				place-items: center;
+			}
+			main {
+				padding: 32px;
+				text-align: center;
+				max-width: 640px;
+			}
+			h1 {
+				color: #c7f441;
+				font-size: 28px;
+				margin: 0 0 12px;
+			}
+			p {
+				color: #909090;
+				line-height: 1.6;
+				font-size: 14px;
+			}
+			code {
+				color: #f5a623;
+				background: rgba(245, 166, 35, 0.08);
+				padding: 2px 6px;
+				border-radius: 3px;
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<h1>THE FOUNDRY</h1>
+			<p>
+				Open dev tools. Type <code>foundry.start()</code> (standalone
+				mode — no console-shell). Pick options with
+				<code>foundry.choose(n)</code>. Used inside a console-shell,
+				the entry-point would be <code>foundry.play()</code>.
+			</p>
+		</main>
+		<script type="module">
+			import { createAdventure } from '../../src/index.ts';
+			import { foundryScript } from './scenes.ts';
+
+			// Standalone usage — no console-shell. The adventure
+			// exposes start/choose/share directly; we hang them
+			// off `window.foundry` ourselves for the console UX.
+			const adventure = createAdventure(foundryScript);
+			window.foundry = {
+				start: () => adventure.start(),
+				choose: (n) => adventure.choose(n),
+				share: () => adventure.share()
+			};
+		</script>
+	</body>
+</html>
