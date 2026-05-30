@@ -1,6 +1,6 @@
 {
 	"name": "console-adventure",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "A branching choice-based text-adventure engine. Plays out in any logger (the browser console by default). Pairs with console-shell.",
 	"keywords": [
 		"text-adventure",

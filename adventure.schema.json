@@ -32,6 +32,11 @@
 			"type": "array",
 			"description": "Lines printed once at the top of every start(). Optional.",
 			"items": { "type": "string" }
+		},
+		"items": {
+			"type": "object",
+			"description": "Item catalogue keyed by item id. Referenced from Scene.items, Choice.requires/consumes/grants, and the runtime inventory.",
+			"additionalProperties": { "$ref": "#/definitions/item" }
 		}
 	},
 	"definitions": {
@@ -54,6 +59,11 @@
 					"description": "Numbered options the player picks via choose(n).",
 					"minItems": 1,
 					"items": { "$ref": "#/definitions/choice" }
+				},
+				"items": {
+					"type": "array",
+					"description": "Items present in this scene at the start of a run. Player can pickup(n).",
+					"items": { "type": "string" }
 				}
 			}
 		},
@@ -77,6 +87,65 @@
 				"next": {
 					"type": ["string", "null"],
 					"description": "Next scene id, or null to end the game."
+				},
+				"requires": {
+					"type": "array",
+					"description": "Item ids the player must hold for this choice to appear.",
+					"items": { "type": "string" }
+				},
+				"consumes": {
+					"type": "array",
+					"description": "Item ids removed from inventory when this choice is picked.",
+					"items": { "type": "string" }
+				},
+				"grants": {
+					"type": "array",
+					"description": "Item ids added to inventory when this choice is picked.",
+					"items": { "type": "string" }
+				}
+			}
+		},
+		"item": {
+			"type": "object",
+			"required": ["name"],
+			"additionalProperties": false,
+			"properties": {
+				"name": {
+					"type": "string",
+					"description": "Player-facing display name for the item."
+				},
+				"description": {
+					"type": "string",
+					"description": "Optional longer description shown by inventory()."
+				},
+				"onUse": { "$ref": "#/definitions/itemUseEffect" }
+			}
+		},
+		"itemUseEffect": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "What happens when the player runs use(n) on this item.",
+			"properties": {
+				"inScenes": {
+					"type": "array",
+					"description": "Scenes where the item can be used. Omit for anywhere.",
+					"items": { "type": "string" }
+				},
+				"text": {
+					"type": "string",
+					"description": "Flavour text printed when the item is used."
+				},
+				"points": {
+					"type": "number",
+					"description": "Score delta applied on use."
+				},
+				"goTo": {
+					"type": ["string", "null"],
+					"description": "Scene jump on use; null to finish the game; omit to stay."
+				},
+				"consumed": {
+					"type": "boolean",
+					"description": "If true, the item is removed from inventory after use."
 				}
 			}
 		},

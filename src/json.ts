@@ -26,6 +26,7 @@
  */
 import type {
 	AdventureConfig,
+	ItemDef,
 	ShareConfig,
 	Scene,
 	Tier
@@ -54,6 +55,12 @@ export interface AdventureJson {
 	tiers?: Tier[];
 	share?: JsonShareConfig;
 	intro?: string[];
+	/**
+	 * Item catalogue. Each entry is referenced by its key from
+	 * `Scene.items` and `Choice.requires/consumes/grants`.
+	 * Authoring an adventure without items leaves this absent.
+	 */
+	items?: Record<string, ItemDef>;
 }
 
 export interface JsonShareConfig {
@@ -105,6 +112,7 @@ export function createAdventureFromJson(
 		scenes: json.scenes,
 		...(json.tiers && { tiers: json.tiers }),
 		...(json.intro && { intro: json.intro }),
+		...(json.items && { items: json.items }),
 		...(extras ?? {})
 	};
 

@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file. The format
 is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — Unreleased
+
+### Added
+
+- Items + inventory system. Adventures can declare a top-level `items`
+  catalogue keyed by item id; scenes carry an `items?` list of item ids
+  present at the start of a run; choices carry optional `requires` / `consumes`
+  / `grants` arrays to gate, consume, or grant items. Five new runtime verbs
+  on `Adventure`: `pickup(n)`, `drop(n)`, `use(n)`, `inventory()`, `look()`.
+- `ItemDef` + `ItemUseEffect` types exported. An item's optional `onUse` field
+  fires on `use(n)` — supports flavour text, score delta, scene jump (or
+  `null` to finish), `inScenes` restriction, and `consumed` for single-use
+  items.
+- `AdventureState` now includes `inventory: string[]` and `sceneItems:
+  Record<string, string[]>` so callers can introspect the run's item state
+  alongside `sceneId` / `score` / `finished`.
+- The shell plugin now registers `pickup`, `drop`, `use`, `inventory`, and
+  `look` commands alongside the existing `play` / `choose` / `share`. Always
+  registered, even when the adventure has no items — a curious player gets
+  the engine's "no item N" / "your inventory is empty" reply rather than an
+  unknown-command error.
+
+### Changed
+
+- `printScene` now renders a "You see:" item list when the current scene has
+  items, and filters the choice list by `requires` -- a choice whose
+  requirements aren't met is HIDDEN, not greyed. `choose(n)` indexes into the
+  visible list so the numbering the player sees always matches the engine.
+- The prompt line under each scene names whichever verbs make sense right
+  now -- always `choose`, plus `pickup` when items are on the floor, plus
+  `inventory()` once the player has anything.
+
 ## [0.4.0] — Unreleased
 
 ### Added

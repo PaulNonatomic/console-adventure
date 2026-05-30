@@ -61,5 +61,7 @@ export type {
 	Scene,
 	Tier,
 	ShareConfig,
-	AdventureConfig
+	AdventureConfig,
+	ItemDef,
+	ItemUseEffect
 } from './types.js';

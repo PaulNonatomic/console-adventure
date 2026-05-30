@@ -123,6 +123,7 @@ When attached, the adventure's theme and logger rebind to the shell's so the com
 | `tiers?`       | `Tier[]`                          | `{ minScore, label, color? }`. Resolver picks the highest qualifying tier.  |
 | `share?`       | `ShareConfig`                     | Set this to enable `share()` after finish.                                  |
 | `intro?`       | `string[]`                        | Lines printed once at the top of every `start()`.                           |
+| `items?`       | `Record<string, ItemDef>`         | Item catalogue. See [Items + inventory](#items--inventory).                  |
 | `theme?`       | `Partial<Theme>`                  | Shallow-merged over `DEFAULT_THEME`. Overridden by the shell theme when bridged. |
 | `logger?`      | `{ log(msg, ...styles) }`         | Defaults to `console`. Tests pass a capturing stub.                         |
 | `onStart?`     | `() => void`                      | Fires every `start()`. No dedupe — that's your job if you want it.          |
@@ -133,8 +134,9 @@ The returned `Adventure` exposes:
 
 - `start()` — start (or restart) the game.
 - `choose(n)` — pick option `n` (1-indexed) in the current scene.
+- `pickup(n)`, `drop(n)`, `use(n)`, `inventory()`, `look()` — see [Items + inventory](#items--inventory).
 - `share()` — open the share intent; no-ops with a hint pre-finish.
-- `getState()` — `{ sceneId, score, finished } | null` for inspection / tests.
+- `getState()` — `{ sceneId, score, finished, inventory, sceneItems } | null` for inspection / tests.
 - `maxScore` — max achievable across all paths (DFS-computed, reconvergence-aware).
 - `tierFor(score)` — resolve a tier label for a score.
 - `asShellPlugin()` — return a `{ attachTo(shell) }` adapter for `console-shell`.
@@ -151,6 +153,52 @@ choices: [
 ```
 
 Two scenes both pointing to a third reconverge cleanly — the `maxScore` resolver walks the graph with memoised DFS so reconverging branches aren't double-counted.
+
+### Items + inventory
+
+A small inventory system layers on top of the choice graph. Define items in a top-level `items` catalogue, place them in scenes via `Scene.items`, and gate / extend choices with `requires` / `consumes` / `grants`.
+
+```ts
+createAdventure({
+	start: 'foyer',
+	items: {
+		key: { name: 'brass key', description: 'cold to the touch' },
+		torch: {
+			name: 'torch',
+			onUse: { text: 'You light it. The corridor brightens.', points: 1 }
+		}
+	},
+	scenes: {
+		foyer: {
+			heading: 'foyer',
+			narration: ['A locked door. A key on the table.'],
+			items: ['key'],
+			choices: [
+				{ label: 'Try the door', next: 'foyer' },
+				{
+					label: 'Unlock the door',
+					requires: ['key'],   // hidden until the player has the key
+					consumes: ['key'],   // key vanishes on use
+					next: 'corridor'
+				}
+			]
+		},
+		corridor: { /* ... */ }
+	}
+});
+```
+
+Five runtime verbs:
+
+- `pickup(n)` — take item `n` from the current scene.
+- `drop(n)` — drop item `n` from your inventory onto the current scene's floor.
+- `use(n)` — fire item `n`'s `onUse` effect (flavour text, score delta, scene jump, optional consume).
+- `inventory()` — list what you're carrying.
+- `look()` — reprint the current scene (useful after picking up to refresh the visible choice list).
+
+**Choices with unmet `requires` are hidden, not greyed.** `choose(n)` indexes into the visible list, so the numbering the player sees always matches the engine. New items unlocking a choice make it appear at the next visible slot, no renumbering for the user to track.
+
+**`onUse` mirrors choice mechanics on purpose.** An item with `{ onUse: { goTo, points, text, consumed } }` is essentially a self-contained choice you carry around. `inScenes` restricts where it can fire; outside that list, `use(n)` prints a dim "can't use that here" line.
 
 ### Theme
 

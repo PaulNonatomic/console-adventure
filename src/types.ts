@@ -32,6 +32,27 @@ export interface Choice {
 	 * `next` across all of a scene's choices.
 	 */
 	next: string | null;
+	/**
+	 * Item ids the player must hold for this choice to appear.
+	 * When set, the engine hides the choice from the rendered
+	 * options list until every required item is in the player's
+	 * inventory. Studio surfaces all choices for authoring; only
+	 * the runtime hides them.
+	 */
+	requires?: string[];
+	/**
+	 * Item ids removed from the inventory when this choice is
+	 * picked. Order is preserved; ids the player isn't holding
+	 * are silently ignored (so consume-list authoring stays
+	 * straightforward even when paths reconverge).
+	 */
+	consumes?: string[];
+	/**
+	 * Item ids granted (added to inventory) when this choice is
+	 * picked. Duplicates of an item the player already has are
+	 * appended -- inventory is a multiset of ids.
+	 */
+	grants?: string[];
 }
 
 /** A single beat in the narrative. */
@@ -42,6 +63,68 @@ export interface Scene {
 	narration: string[];
 	/** Choices the player can pick via `choose(n)`. */
 	choices: Choice[];
+	/**
+	 * Items present in the scene at the start of a run. Players
+	 * can `pickup(n)` them; dropped items also accumulate here
+	 * so the scene state stays consistent. Per-run mutable state
+	 * lives in `AdventureState.sceneItems`; this field is the
+	 * static seed.
+	 */
+	items?: string[];
+}
+
+/**
+ * Effects fired when the player invokes `use(n)` on an item in
+ * their inventory. Mirrors a Choice's effect shape on purpose
+ * (points, flavour, scene jump) so authoring an interactive
+ * item feels like authoring a self-contained choice attached to
+ * the item rather than to a scene.
+ */
+export interface ItemUseEffect {
+	/**
+	 * Scenes where the item can be used. Omit for "anywhere";
+	 * supply an array to restrict use to specific scenes. When
+	 * the player tries to use the item in a scene that isn't on
+	 * the list, the engine prints a dim "you can't use that
+	 * here" line and changes nothing.
+	 */
+	inScenes?: string[];
+	/** Flavour text printed when the item is used. */
+	text?: string;
+	/** Score delta on use. */
+	points?: number;
+	/**
+	 * Scene jump on use. `string` = id to advance to;
+	 * `null` = finish the game. Omit to stay in the current
+	 * scene.
+	 */
+	goTo?: string | null;
+	/**
+	 * If true, the item is removed from the inventory after a
+	 * successful use. Defaults to false -- the item stays so the
+	 * player can use it multiple times.
+	 */
+	consumed?: boolean;
+}
+
+/**
+ * Catalogue entry for an item. Items are referenced by their
+ * key in `AdventureConfig.items` from scenes (`Scene.items`),
+ * choices (`Choice.requires/consumes/grants`), and the player's
+ * inventory. The catalogue is the canonical source for display
+ * names + descriptions; scenes / choices only carry the keys.
+ */
+export interface ItemDef {
+	/** Player-facing display name. */
+	name: string;
+	/** Optional longer description shown by `inventory()`. */
+	description?: string;
+	/**
+	 * What happens when the player runs `use(n)` on this item.
+	 * Omit entirely for a flavour-only item -- using it then
+	 * prints a generic "nothing happens" line.
+	 */
+	onUse?: ItemUseEffect;
 }
 
 /**
@@ -112,4 +195,11 @@ export interface AdventureConfig {
 	 * play.
 	 */
 	intro?: string[];
+	/**
+	 * Item catalogue. Each entry is referenced by its key from
+	 * `Scene.items`, `Choice.requires/consumes/grants`, and the
+	 * player's inventory at runtime. Omit entirely for an
+	 * adventure with no inventory mechanics.
+	 */
+	items?: Record<string, ItemDef>;
 }
