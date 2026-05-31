@@ -63,5 +63,9 @@ export type {
 	ShareConfig,
 	AdventureConfig,
 	ItemDef,
-	ItemUseEffect
+	ItemUseEffect,
+	Condition,
+	CompareOp,
+	StateEffect,
+	ChoiceBranch
 } from './types.js';

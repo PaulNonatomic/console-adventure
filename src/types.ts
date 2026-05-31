@@ -12,6 +12,71 @@
  * advances to the scene named in `next` (or finishes if `next`
  * is `null`).
  */
+/** Comparison operators for numeric conditions. */
+export type CompareOp = '==' | '!=' | '>=' | '<=' | '>' | '<';
+
+/**
+ * A predicate evaluated against the run's live state
+ * (variables, inventory, score, visited scenes). Conditions
+ * gate branch transitions. The `kind` discriminator keeps the
+ * set extensible — new condition types slot in without
+ * touching existing ones.
+ */
+export type Condition =
+	| {
+			/** Inventory contains (or, with `negate`, lacks) `item`. */
+			kind: 'hasItem';
+			item: string;
+			negate?: boolean;
+	  }
+	| {
+			/** A state variable compared to a constant. Unset vars read as 0. */
+			kind: 'var';
+			var: string;
+			op: CompareOp;
+			value: number;
+	  }
+	| {
+			/** The player's running score compared to a constant. */
+			kind: 'score';
+			op: CompareOp;
+			value: number;
+	  }
+	| {
+			/** Player has (or, with `negate`, has not) visited `scene`. */
+			kind: 'visited';
+			scene: string;
+			negate?: boolean;
+	  };
+
+/**
+ * A mutation to a state variable, applied when a choice is
+ * picked or an item is used. `set` replaces the value; `add`
+ * increments by `value` (negative to decrement). A flag is
+ * just a variable set to 1 / 0.
+ */
+export interface StateEffect {
+	var: string;
+	op: 'set' | 'add';
+	value: number;
+}
+
+/**
+ * A guarded transition. When a choice is picked, its `branches`
+ * are evaluated in order; the first branch whose `when`
+ * conditions ALL hold wins, and the game advances to that
+ * branch's `goTo`. If no branch matches, the choice's plain
+ * `next` is used as the fallback. This is how a single choice
+ * routes to scene A when a condition holds and scene B
+ * otherwise.
+ */
+export interface ChoiceBranch {
+	/** Conditions, all ANDed. An empty array always matches. */
+	when: Condition[];
+	/** Destination when this branch wins. `null` finishes the game. */
+	goTo: string | null;
+}
+
 export interface Choice {
 	/** Display text shown after the choice index. */
 	label: string;
@@ -53,6 +118,20 @@ export interface Choice {
 	 * appended -- inventory is a multiset of ids.
 	 */
 	grants?: string[];
+	/**
+	 * State mutations applied when this choice is picked (set /
+	 * add a variable). Run before the transition is resolved, so
+	 * a branch on the same choice can read the value this choice
+	 * just set.
+	 */
+	effects?: StateEffect[];
+	/**
+	 * Conditional transitions. Evaluated in order; the first
+	 * branch whose conditions all hold determines the next
+	 * scene. Falls back to `next` when none match. Omit for a
+	 * plain unconditional choice.
+	 */
+	branches?: ChoiceBranch[];
 }
 
 /** A single beat in the narrative. */
@@ -105,6 +184,13 @@ export interface ItemUseEffect {
 	 * player can use it multiple times.
 	 */
 	consumed?: boolean;
+	/**
+	 * State mutations applied when the item is used. Lets an
+	 * item set a flag / bump a counter the rest of the
+	 * adventure can branch on — this is how "use the lantern"
+	 * can light a flag that unlocks a later path.
+	 */
+	effects?: StateEffect[];
 }
 
 /**
@@ -202,4 +288,12 @@ export interface AdventureConfig {
 	 * adventure with no inventory mechanics.
 	 */
 	items?: Record<string, ItemDef>;
+	/**
+	 * Starting values for tracked state variables. Seeded into
+	 * `AdventureState.state` on each `start()`. Variables not
+	 * listed here read as 0 the first time a condition checks
+	 * them, so this is only needed when a non-zero starting
+	 * value matters.
+	 */
+	initialState?: Record<string, number>;
 }

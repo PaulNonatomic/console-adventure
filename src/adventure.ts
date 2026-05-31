@@ -25,8 +25,11 @@ import { resolveTheme, styleFor, styleBoldFor } from 'console-shell';
 import type {
 	AdventureConfig,
 	Choice,
+	CompareOp,
+	Condition,
 	ItemDef,
 	Scene,
+	StateEffect,
 	Tier
 } from './types.js';
 import {
@@ -58,6 +61,17 @@ export interface AdventureState {
 	 * pick up or drop. Scenes with no item activity are absent.
 	 */
 	sceneItems: Record<string, string[]>;
+	/**
+	 * Tracked state variables. Seeded from
+	 * `AdventureConfig.initialState`; mutated by choice / item
+	 * `effects`. Conditions read from here (unset reads as 0).
+	 */
+	vars: Record<string, number>;
+	/**
+	 * Scene ids visited so far this run, in order, including the
+	 * current one. Drives the `visited` condition kind.
+	 */
+	visited: string[];
 }
 
 export interface Adventure {
@@ -178,7 +192,11 @@ export function createAdventure(config: AdventureConfig): Adventure {
 			score: 0,
 			finished: false,
 			inventory: [],
-			sceneItems
+			sceneItems,
+			// Clone initialState so mutations don't leak back into
+			// the config (which is reused across restarts).
+			vars: { ...(config.initialState ?? {}) },
+			visited: [config.start]
 		};
 		config.onStart?.();
 
@@ -240,16 +258,102 @@ export function createAdventure(config: AdventureConfig): Adventure {
 		}
 
 		state.score += choice.points ?? 0;
+
+		// State effects run before the transition resolves so a
+		// branch on this same choice can read a value it just
+		// set (e.g. "+1 trust, then route to the ally scene if
+		// trust >= 3").
+		applyEffects(choice.effects);
+
 		if (choice.flavour) {
 			printResultCallout(choice.flavour);
 		}
 
-		if (choice.next === null) {
-			finish();
-		} else {
-			state.sceneId = choice.next;
-			printScene(state.sceneId);
+		// Resolve the destination: a matching branch wins,
+		// otherwise the plain `next` is the fallback.
+		const dest = resolveNext(choice);
+		advanceTo(dest);
+	}
+
+	/* ─── state effects + conditions ──────────────────────── */
+
+	function applyEffects(effects: StateEffect[] | undefined): void {
+		if (!state || !effects) return;
+		for (const fx of effects) {
+			const current = state.vars[fx.var] ?? 0;
+			state.vars[fx.var] = fx.op === 'add' ? current + fx.value : fx.value;
 		}
+	}
+
+	function compare(a: number, op: CompareOp, b: number): boolean {
+		switch (op) {
+			case '==':
+				return a === b;
+			case '!=':
+				return a !== b;
+			case '>=':
+				return a >= b;
+			case '<=':
+				return a <= b;
+			case '>':
+				return a > b;
+			case '<':
+				return a < b;
+			default:
+				return false;
+		}
+	}
+
+	function matchCondition(cond: Condition): boolean {
+		if (!state) return false;
+		switch (cond.kind) {
+			case 'hasItem': {
+				const has = state.inventory.includes(cond.item);
+				return cond.negate ? !has : has;
+			}
+			case 'var':
+				return compare(state.vars[cond.var] ?? 0, cond.op, cond.value);
+			case 'score':
+				return compare(state.score, cond.op, cond.value);
+			case 'visited': {
+				const seen = state.visited.includes(cond.scene);
+				return cond.negate ? !seen : seen;
+			}
+			default:
+				return false;
+		}
+	}
+
+	/** All conditions ANDed; an empty list always matches. */
+	function matchAll(conds: Condition[]): boolean {
+		return conds.every((c) => matchCondition(c));
+	}
+
+	/**
+	 * Pick a choice's destination. First branch whose `when`
+	 * all hold wins; otherwise the plain `next` fallback.
+	 */
+	function resolveNext(choice: Choice): string | null {
+		if (choice.branches) {
+			for (const branch of choice.branches) {
+				if (matchAll(branch.when)) return branch.goTo;
+			}
+		}
+		return choice.next;
+	}
+
+	/** Advance to a resolved destination (or finish on null). */
+	function advanceTo(dest: string | null): void {
+		if (!state) return;
+		if (dest === null) {
+			finish();
+			return;
+		}
+		state.sceneId = dest;
+		if (state.visited[state.visited.length - 1] !== dest) {
+			state.visited.push(dest);
+		}
+		printScene(dest);
 	}
 
 	/* ─── items: pickup / drop / use / inventory / look ───── */
@@ -366,21 +470,21 @@ export function createAdventure(config: AdventureConfig): Adventure {
 		}
 		// Apply effects in this order: consume (so the inventory
 		// numbering for any subsequent action is stable), points,
-		// flavour text, then scene jump.
+		// state effects, flavour text, then scene jump.
 		if (effect.consumed) {
 			state.inventory.splice(n - 1, 1);
 		}
 		if (typeof effect.points === 'number') {
 			state.score += effect.points;
 		}
+		applyEffects(effect.effects);
 		if (effect.text) {
 			printResultCallout(effect.text);
 		}
-		if (effect.goTo === null) {
-			finish();
-		} else if (typeof effect.goTo === 'string') {
-			state.sceneId = effect.goTo;
-			printScene(state.sceneId);
+		// goTo: string advances (tracking visited), null finishes,
+		// undefined stays put.
+		if (effect.goTo !== undefined) {
+			advanceTo(effect.goTo);
 		}
 	}
 

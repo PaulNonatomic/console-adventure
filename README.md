@@ -200,6 +200,51 @@ Five runtime verbs:
 
 **`onUse` mirrors choice mechanics on purpose.** An item with `{ onUse: { goTo, points, text, consumed } }` is essentially a self-contained choice you carry around. `inScenes` restricts where it can fire; outside that list, `use(n)` prints a dim "can't use that here" line.
 
+### State + conditional branches
+
+Adventures can track named numeric **state variables** (a flag is just a variable set to `1`/`0`), mutate them with **effects**, and route choices conditionally with **branches**.
+
+```ts
+createAdventure({
+	start: 'gate',
+	initialState: { trust: 0 },
+	scenes: {
+		gate: {
+			heading: 'gate',
+			narration: ['The guard eyes you.'],
+			choices: [
+				{ label: 'Offer a gift', effects: [{ var: 'trust', op: 'add', value: 2 }], next: 'gate' },
+				{
+					label: 'Ask to pass',
+					branches: [
+						// first branch whose conditions ALL hold wins…
+						{ when: [{ kind: 'var', var: 'trust', op: '>=', value: 2 }], goTo: 'inside' }
+					],
+					next: 'rebuffed' // …otherwise this fallback
+				}
+			]
+		},
+		inside: { /* ... */ },
+		rebuffed: { /* ... */ }
+	}
+});
+```
+
+- **`initialState`** — starting variable values (omitted vars read as `0`).
+- **`effects`** on a choice or an item's `onUse` — `{ var, op: 'set' | 'add', value }`. Choice effects run *before* the transition resolves, so a branch on the same choice can read a value that choice just set.
+- **`branches`** on a choice — an ordered list of `{ when: Condition[], goTo }`. The first branch whose conditions all hold (ANDed; empty `when` always matches) determines the next scene; if none match, the choice's plain `next` is the fallback. This is how one choice routes to A when a condition holds and B otherwise.
+
+**Condition kinds** (the `kind` discriminator keeps the set extensible):
+
+| `kind`      | shape                                  | tests                                  |
+| ----------- | -------------------------------------- | -------------------------------------- |
+| `hasItem`   | `{ item, negate? }`                    | inventory contains (or lacks) an item  |
+| `var`       | `{ var, op, value }`                   | a state variable vs a constant         |
+| `score`     | `{ op, value }`                        | running score vs a constant            |
+| `visited`   | `{ scene, negate? }`                   | player has (or hasn't) been to a scene |
+
+`op` is one of `== != >= <= > <`. `getState()` exposes the live `vars` and `visited` arrays alongside `inventory` so tooling can introspect a run.
+
 ### Theme
 
 `DEFAULT_THEME` ships a phosphor-on-void palette (lime + amber + magenta + cyan on near-black). Override any field via `theme:` in config, or rely on the shell's theme when bridged. Slot names: `primary`, `accent`, `danger`, `info`, `text`, `dim`.

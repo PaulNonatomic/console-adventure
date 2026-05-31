@@ -61,6 +61,12 @@ export interface AdventureJson {
 	 * Authoring an adventure without items leaves this absent.
 	 */
 	items?: Record<string, ItemDef>;
+	/**
+	 * Starting values for tracked state variables. Seeded into
+	 * the run's state on each `start()`; choice / item `effects`
+	 * mutate it and `branches` read it.
+	 */
+	initialState?: Record<string, number>;
 }
 
 export interface JsonShareConfig {
@@ -113,6 +119,7 @@ export function createAdventureFromJson(
 		...(json.tiers && { tiers: json.tiers }),
 		...(json.intro && { intro: json.intro }),
 		...(json.items && { items: json.items }),
+		...(json.initialState && { initialState: json.initialState }),
 		...(extras ?? {})
 	};
 

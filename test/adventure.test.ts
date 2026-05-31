@@ -512,3 +512,200 @@ describe('items / inventory', () => {
 		expect(registered.look).toBeDefined();
 	});
 });
+
+/* ─── state, conditions, conditional branches ──────────── */
+
+describe('state + conditional branches', () => {
+	it('seeds vars from initialState and visited from the start scene', () => {
+		const a = createAdventure({
+			start: 'a',
+			initialState: { gold: 5 },
+			scenes: {
+				a: { heading: 'A', narration: [], choices: [{ label: 'x', next: null }] }
+			}
+		});
+		a.start();
+		const s = a.getState()!;
+		expect(s.vars).toEqual({ gold: 5 });
+		expect(s.visited).toEqual(['a']);
+	});
+
+	it('choice effects mutate vars (set + add)', () => {
+		const a = createAdventure({
+			start: 'a',
+			scenes: {
+				a: {
+					heading: 'A',
+					narration: [],
+					choices: [
+						{
+							label: 'gain',
+							effects: [
+								{ var: 'gold', op: 'set', value: 10 },
+								{ var: 'gold', op: 'add', value: 5 }
+							],
+							next: 'b'
+						}
+					]
+				},
+				b: { heading: 'B', narration: [], choices: [{ label: 'end', next: null }] }
+			}
+		});
+		a.start();
+		a.choose(1);
+		expect(a.getState()!.vars.gold).toBe(15);
+	});
+
+	it('routes to a branch target when its condition holds, else next', () => {
+		const make = () =>
+			createAdventure({
+				start: 'gate',
+				items: { key: { name: 'key' } },
+				scenes: {
+					gate: {
+						heading: 'gate',
+						narration: [],
+						items: ['key'],
+						choices: [
+							{
+								label: 'open',
+								branches: [
+									{ when: [{ kind: 'hasItem', item: 'key' }], goTo: 'vault' }
+								],
+								next: 'locked'
+							}
+						]
+					},
+					vault: { heading: 'vault', narration: [], choices: [{ label: 'e', next: null }] },
+					locked: { heading: 'locked', narration: [], choices: [{ label: 'e', next: null }] }
+				}
+			});
+
+		// Without the key → fallback `next`.
+		const a1 = make();
+		a1.start();
+		a1.choose(1);
+		expect(a1.getState()!.sceneId).toBe('locked');
+
+		// With the key → branch wins.
+		const a2 = make();
+		a2.start();
+		a2.pickup(1); // key
+		a2.choose(1);
+		expect(a2.getState()!.sceneId).toBe('vault');
+	});
+
+	it('evaluates a var-compare branch against effects set earlier in the chain', () => {
+		const a = createAdventure({
+			start: 'a',
+			scenes: {
+				a: {
+					heading: 'A',
+					narration: [],
+					choices: [{ label: 'trust', effects: [{ var: 'trust', op: 'add', value: 3 }], next: 'b' }]
+				},
+				b: {
+					heading: 'B',
+					narration: [],
+					choices: [
+						{
+							label: 'approach',
+							branches: [
+								{ when: [{ kind: 'var', var: 'trust', op: '>=', value: 3 }], goTo: 'ally' }
+							],
+							next: 'rebuff'
+						}
+					]
+				},
+				ally: { heading: 'ally', narration: [], choices: [{ label: 'e', next: null }] },
+				rebuff: { heading: 'rebuff', narration: [], choices: [{ label: 'e', next: null }] }
+			}
+		});
+		a.start();
+		a.choose(1); // +3 trust → b
+		a.choose(1); // branch: trust>=3 → ally
+		expect(a.getState()!.sceneId).toBe('ally');
+	});
+
+	it('first matching branch wins; empty when[] always matches', () => {
+		const a = createAdventure({
+			start: 'a',
+			scenes: {
+				a: {
+					heading: 'A',
+					narration: [],
+					choices: [
+						{
+							label: 'go',
+							branches: [
+								{ when: [{ kind: 'score', op: '>=', value: 100 }], goTo: 'rich' },
+								{ when: [], goTo: 'default' }
+							],
+							next: 'unused'
+						}
+					]
+				},
+				rich: { heading: 'rich', narration: [], choices: [{ label: 'e', next: null }] },
+				default: { heading: 'd', narration: [], choices: [{ label: 'e', next: null }] },
+				unused: { heading: 'u', narration: [], choices: [{ label: 'e', next: null }] }
+			}
+		});
+		a.start();
+		a.choose(1);
+		// score is 0, first branch fails, empty-when branch wins.
+		expect(a.getState()!.sceneId).toBe('default');
+	});
+
+	it('visited condition reads the run path; negate inverts it', () => {
+		const a = createAdventure({
+			start: 'a',
+			scenes: {
+				a: {
+					heading: 'A',
+					narration: [],
+					choices: [{ label: 'to b', next: 'b' }]
+				},
+				b: {
+					heading: 'B',
+					narration: [],
+					choices: [
+						{
+							label: 'check',
+							branches: [
+								{ when: [{ kind: 'visited', scene: 'a' }], goTo: 'knew' }
+							],
+							next: 'new'
+						}
+					]
+				},
+				knew: { heading: 'k', narration: [], choices: [{ label: 'e', next: null }] },
+				new: { heading: 'n', narration: [], choices: [{ label: 'e', next: null }] }
+			}
+		});
+		a.start();
+		a.choose(1); // a -> b (a is visited)
+		a.choose(1); // visited 'a' → knew
+		expect(a.getState()!.sceneId).toBe('knew');
+	});
+
+	it('item onUse effects mutate state', () => {
+		const a = createAdventure({
+			start: 'a',
+			items: {
+				lantern: { name: 'lantern', onUse: { text: 'lit', effects: [{ var: 'lit', op: 'set', value: 1 }] } }
+			},
+			scenes: {
+				a: {
+					heading: 'A',
+					narration: [],
+					items: ['lantern'],
+					choices: [{ label: 'e', next: null }]
+				}
+			}
+		});
+		a.start();
+		a.pickup(1);
+		a.use(1);
+		expect(a.getState()!.vars.lit).toBe(1);
+	});
+});

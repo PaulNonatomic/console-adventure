@@ -37,6 +37,11 @@
 			"type": "object",
 			"description": "Item catalogue keyed by item id. Referenced from Scene.items, Choice.requires/consumes/grants, and the runtime inventory.",
 			"additionalProperties": { "$ref": "#/definitions/item" }
+		},
+		"initialState": {
+			"type": "object",
+			"description": "Starting values for tracked state variables, seeded into the run on each start(). Choice/item effects mutate it; branches read it.",
+			"additionalProperties": { "type": "number" }
 		}
 	},
 	"definitions": {
@@ -102,6 +107,71 @@
 					"type": "array",
 					"description": "Item ids added to inventory when this choice is picked.",
 					"items": { "type": "string" }
+				},
+				"effects": {
+					"type": "array",
+					"description": "State mutations applied when this choice is picked.",
+					"items": { "$ref": "#/definitions/stateEffect" }
+				},
+				"branches": {
+					"type": "array",
+					"description": "Conditional transitions. First branch whose conditions all hold wins; falls back to next.",
+					"items": { "$ref": "#/definitions/choiceBranch" }
+				}
+			}
+		},
+		"stateEffect": {
+			"type": "object",
+			"required": ["var", "op", "value"],
+			"additionalProperties": false,
+			"description": "A mutation to a state variable.",
+			"properties": {
+				"var": { "type": "string" },
+				"op": { "type": "string", "enum": ["set", "add"] },
+				"value": { "type": "number" }
+			}
+		},
+		"condition": {
+			"type": "object",
+			"required": ["kind"],
+			"additionalProperties": false,
+			"description": "A predicate over run state. Discriminated by `kind`.",
+			"properties": {
+				"kind": {
+					"type": "string",
+					"enum": ["hasItem", "var", "score", "visited"]
+				},
+				"item": { "type": "string", "description": "For kind=hasItem." },
+				"scene": { "type": "string", "description": "For kind=visited." },
+				"negate": {
+					"type": "boolean",
+					"description": "For kind=hasItem / visited — invert the test."
+				},
+				"var": { "type": "string", "description": "For kind=var." },
+				"op": {
+					"type": "string",
+					"enum": ["==", "!=", ">=", "<=", ">", "<"],
+					"description": "For kind=var / score."
+				},
+				"value": {
+					"type": "number",
+					"description": "For kind=var / score."
+				}
+			}
+		},
+		"choiceBranch": {
+			"type": "object",
+			"required": ["when", "goTo"],
+			"additionalProperties": false,
+			"description": "A guarded transition. All `when` conditions ANDed.",
+			"properties": {
+				"when": {
+					"type": "array",
+					"items": { "$ref": "#/definitions/condition" }
+				},
+				"goTo": {
+					"type": ["string", "null"],
+					"description": "Destination when this branch wins; null finishes."
 				}
 			}
 		},
@@ -146,6 +216,11 @@
 				"consumed": {
 					"type": "boolean",
 					"description": "If true, the item is removed from inventory after use."
+				},
+				"effects": {
+					"type": "array",
+					"description": "State mutations applied when the item is used.",
+					"items": { "$ref": "#/definitions/stateEffect" }
 				}
 			}
 		},

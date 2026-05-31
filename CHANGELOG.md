@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file. The format
 is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — Unreleased
+
+### Added
+
+- State + conditional branching. Adventures can track named numeric **state
+  variables** (a flag = a variable set to 1/0), seeded from a new top-level
+  `initialState`. New `StateEffect` (`{ var, op: 'set'|'add', value }`) on a
+  choice's `effects` and on an item's `onUse.effects` mutates them.
+- **Conditional transitions** via `Choice.branches` — an ordered list of
+  `{ when: Condition[], goTo }`. On pick, choice effects apply, then the first
+  branch whose conditions all hold (ANDed; empty `when` always matches)
+  decides the next scene; falls back to the plain `next` when none match.
+- `Condition` discriminated union with four v1 kinds: `hasItem` (with
+  `negate`), `var` (compare a variable), `score` (compare running score),
+  `visited` (been to a scene, with `negate`). `CompareOp` = `== != >= <= > <`.
+  `ChoiceBranch`, `StateEffect`, `Condition`, `CompareOp` all exported.
+- `AdventureState` gains `vars: Record<string, number>` and `visited:
+  string[]` so tooling / the studio can show live state and what changed.
+
+### Changed
+
+- `choose(n)` resolves its destination through the new branch logic
+  (effects → resolve branch → advance), and item `use(n)` applies `onUse.
+  effects` + tracks visited on a scene jump. Plain choices with no `branches`
+  behave exactly as before — additive, backward compatible.
+
 ## [0.5.0] — Unreleased
 
 ### Added
