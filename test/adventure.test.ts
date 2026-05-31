@@ -491,6 +491,53 @@ describe('items / inventory', () => {
 		expect(a.getState()!.inventory).toEqual(['gift']);
 	});
 
+	it('narrates a gain when a choice grants an item (not silent)', () => {
+		const { logger, messages } = makeLogger();
+		const a = createAdventure({
+			start: 's',
+			items: { gift: { name: 'shiny gift' } },
+			logger,
+			scenes: {
+				s: {
+					heading: 's',
+					narration: [''],
+					choices: [{ label: 'receive', grants: ['gift'], next: null }]
+				}
+			}
+		});
+		a.start();
+		const before = messages.length;
+		a.choose(1);
+		expect(
+			messages.slice(before).some((m) => m.includes('You gain the shiny gift'))
+		).toBe(true);
+	});
+
+	it('narrates a loss when a choice consumes a held item (not silent)', () => {
+		const { logger, messages } = makeLogger();
+		const a = createAdventure({ ...itemScript, logger });
+		a.start();
+		a.pickup(1); // key
+		const before = messages.length;
+		a.choose(2); // unlock — consumes key
+		expect(
+			messages.slice(before).some((m) => m.includes('You use up the brass key'))
+		).toBe(true);
+	});
+
+	it('does not narrate a consume for an item the player never held', () => {
+		const { logger, messages } = makeLogger();
+		const a = createAdventure({ ...itemScript, logger });
+		a.start();
+		// choose(2) consumes 'key', but we never picked it up, so
+		// nothing is removed and nothing should be narrated.
+		const before = messages.length;
+		a.choose(1); // a non-consuming choice
+		expect(
+			messages.slice(before).some((m) => m.includes('You use up'))
+		).toBe(false);
+	});
+
 	it('shell plugin registers pickup / drop / use / inventory / look', () => {
 		const registered: Record<string, { run: (...args: unknown[]) => void }> = {};
 		const fakeShell = {

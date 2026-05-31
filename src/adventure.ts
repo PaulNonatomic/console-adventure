@@ -244,16 +244,25 @@ export function createAdventure(config: AdventureConfig): Adventure {
 
 		// Apply consume / grant inventory effects BEFORE flavour
 		// + transition so a choice that grants an item and
-		// flavours about it reads coherently.
+		// flavours about it reads coherently. Track what actually
+		// changed so the gain/loss can be narrated -- otherwise the
+		// inventory shifts silently and the player never learns the
+		// item mattered.
+		const consumed: string[] = [];
 		if (choice.consumes && choice.consumes.length > 0) {
 			for (const id of choice.consumes) {
 				const idx = state.inventory.indexOf(id);
-				if (idx >= 0) state.inventory.splice(idx, 1);
+				if (idx >= 0) {
+					state.inventory.splice(idx, 1);
+					consumed.push(id);
+				}
 			}
 		}
+		const granted: string[] = [];
 		if (choice.grants && choice.grants.length > 0) {
 			for (const id of choice.grants) {
 				state.inventory.push(id);
+				granted.push(id);
 			}
 		}
 
@@ -267,6 +276,23 @@ export function createAdventure(config: AdventureConfig): Adventure {
 
 		if (choice.flavour) {
 			printResultCallout(choice.flavour);
+		}
+
+		// Narrate inventory changes the choice caused, after the
+		// flavour beat so the story reads first and the mechanical
+		// note follows. Gains before losses ("you gain the key …
+		// you use up the lantern").
+		if (granted.length > 0) {
+			logger.log(
+				`%c   You gain ${listItemsWithThe(granted)}.`,
+				styleFor(theme, 'accent')
+			);
+		}
+		if (consumed.length > 0) {
+			logger.log(
+				`%c   You use up ${listItemsWithThe(consumed)}.`,
+				styleFor(theme, 'accent')
+			);
 		}
 
 		// Resolve the destination: a matching branch wins,
@@ -384,6 +410,16 @@ export function createAdventure(config: AdventureConfig): Adventure {
 	function itemDisplay(id: string): string {
 		const item: ItemDef | undefined = config.items?.[id];
 		return item?.name ?? id;
+	}
+
+	// "the lantern" / "the lantern and the key" / "the lantern, the
+	// key and the coin" -- used to narrate item gains/losses that a
+	// choice triggers, so they never happen silently.
+	function listItemsWithThe(ids: string[]): string {
+		const parts = ids.map((id) => `the ${itemDisplay(id)}`);
+		if (parts.length <= 1) return parts[0] ?? '';
+		if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+		return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
 	}
 
 	function pickup(n: number): void {
